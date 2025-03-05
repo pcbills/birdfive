@@ -776,14 +776,13 @@
             }
         }
 
-        // Show the answers
+       // Show the answers
         function showAnswers() {
             resetGame();
             
             // Get all word buttons to map words to their IDs
             const wordButtons = elements.wordBank.querySelectorAll('.word-item');
             const wordToIdMap = new Map();
-            const usedWordIds = new Set();
             
             // Create a map of word text to available wordIds
             wordButtons.forEach(button => {
@@ -796,37 +795,37 @@
                 wordToIdMap.get(word).push(wordId);
             });
             
-            // Fill in all input boxes with correct answers
+            // Get all input boxes
             const inputBoxes = document.querySelectorAll('.input-box');
             
+            // Track which word IDs have been used
+            const usedWordIds = new Set();
+            
+            // Fill in each box with the correct answer
             inputBoxes.forEach(box => {
                 const birdIndex = box.dataset.birdIndex;
                 const wordType = box.dataset.wordType;
                 const correctWord = state.currentBirds[birdIndex][wordType];
                 
-                // Find an unused wordId for this word
-                const availableIds = wordToIdMap.get(correctWord) || [];
-                let wordId = null;
+                // Find an available ID for this word
+                const availableIds = wordToIdMap.get(correctWord).filter(id => !usedWordIds.has(id));
                 
-                for (const id of availableIds) {
-                    if (!usedWordIds.has(id)) {
-                        wordId = id;
-                        usedWordIds.add(id);
-                        break;
-                    }
-                }
-                
-                box.textContent = correctWord;
-                box.classList.add('filled', 'correct');
-                
-                if (wordId) {
+                if (availableIds.length > 0) {
+                    const wordId = availableIds[0];
+                    usedWordIds.add(wordId);
+                    
+                    // Fill in the box
+                    box.textContent = correctWord;
+                    box.classList.add('filled', 'correct');
                     box.dataset.wordId = wordId;
+                    
+                    // Mark word as used
                     state.activeWords[wordId] = true;
+                    
+                    // Track filled box
+                    const key = `${birdIndex}-${wordType}`;
+                    state.filledBoxes[key] = correctWord;
                 }
-                
-                // Track filled box
-                const key = `${birdIndex}-${wordType}`;
-                state.filledBoxes[key] = correctWord;
             });
             
             // Update word button states
