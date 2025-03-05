@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birdfive</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --color-correct: #6aaa64;
+            --color-present: #c9b458;
+            --color-absent: #787c7e;
+            --color-background: #ffffff;
+            --color-border: #d3d6da;
+            --font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--color-background);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        /* Header styles */
+        .game-header {
+            text-align: center;
+            padding: 5px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .game-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            color: #1a1a1b;
+        }
+
+        #help-button {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0.5rem;
+            border-radius: 9999px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            z-index: 50;
+            transition: background-color 0.2s;
+        }
+
+        #help-button:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Game container */
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Birds display section */
+        .birds-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bird-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: calc(20% - 8px);
+            margin-bottom: 10px;
+        }
+
+        .bird-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--color-border);
+            margin-bottom: 8px;
+        }
+
+        .bird-inputs {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 5px;
+        }
+
+        .input-box {
+            height: 36px;
+            border: 2px solid var(--color-border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: white;
+            padding: 0 5px;
+            text-align: center;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-size: 0.85rem;
+        }
+
+        .input-box.active {
+            border-color: var(--color-correct);
+            box-shadow: 0 0 5px rgba(106, 170, 100, 0.5);
+        }
+
+        .input-box.filled {
+            background-color: #f0f0f0;
+        }
+
+        .input-box.correct {
+            background-color: var(--color-correct);
+            color: white;
+            border-color: var(--color-correct);
+        }
+
+        /* Word bank section */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .word-item {
+            padding: 10px 15px;
+            background-color: var(--color-border);
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .word-item:hover {
+            background-color: #c0c4c9;
+        }
+
+        .word-item.used {
+            opacity: 0.5;
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+
+        /* Control buttons */
+        .control-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--color-correct);
+            color: white;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .control-button:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Show answer button style */
+        #show-answer-button {
+            background-color: #808080;
+        }
+
+        #show-answer-button:hover {
+            background-color: #666666;
+        }
+
+        /* Win message */
+        #win-message {
+            position: fixed;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 23px 0 rgba(0, 0, 0, 0.2), 0 0 20px rgba(106, 170, 100, 0.6);
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--color-correct);
+            z-index: 1000;
+            text-align: center;
+            animation: celebrate 0.6s ease-in-out;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        /* Help modal */
+        #help-modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: none;
+        }
+
+        #help-modal.hidden {
+            display: none;
+        }
+
+        #help-modal:not(.hidden) {
+            display: block;
+        }
+
+        .bg-white {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            max-width: 28rem;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: auto;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .space-y-4 > * + * {
+            margin-top: 1rem;
+        }
+
+        .list-disc {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+        }
+
+        .list-decimal {
+            list-style-type: decimal;
+            padding-left: 1.25rem;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 65%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Trophy icon */
+        .trophy {
+            display: block;
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: gold;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .birds-container {
+                justify-content: center;
+            }
+
+            .bird-item {
+                width: calc(33.33% - 10px);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .bird-item {
+                width: calc(50% - 10px);
+            }
+
+            .bird-image {
+                width: 100px;
+                height: 100px;
+            }
+
+            .word-item {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .control-button {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-header">
+        <h1 class="game-title">Birdfive</h1>
+        <button id="help-button">?</button>
+    </div>
+
+    <div class="game-container">
+        <div class="birds-container" id="birds-container">
+            <!-- Bird images and input boxes will be inserted here -->
+        </div>
+
+        <div class="word-bank" id="word-bank">
+            <!-- Word buttons will be inserted here -->
+        </div>
+
+        <div class="control-buttons">
+            <button id="reset-button" class="control-button">Reset</button>
+            <button id="new-puzzle-button" class="control-button">New Puzzle</button>
+            <button id="show-answer-button" class="control-button">Show Answer</button>
+        </div>
+    </div>
+
+    <div id="help-modal" class="hidden">
+        <div class="bg-white">
+            <h2 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">How to Play Birdfive</h2>
+            <div class="space-y-4">
+                <p>
+                    Birdfive is a bird word matching game where you need to match each bird with its two descriptor words.
+                </p>
+                <br>
+                <p>
+                    Each bird has two words associated with it. Your task is to match all 10 words correctly with the 5 birds.
+                </p>
+
+                <div>
+                    <h3 style="font-weight: bold; margin-bottom: 0.5rem;">How to Play:</h3>
+                    <ol style="list-style-type: decimal; padding-left: 1.25rem;">
+                        <li style="margin-top: 0.5rem;">Click on an empty input box beneath a bird</li>
+                        <li style="margin-top: 0.5rem;">Click a word from the word bank to place it in the selected box</li>
+                        <li style="margin-top: 0.5rem;">Continue until you've matched all words to their birds</li>
+                        <li style="margin-top: 0.5rem;">If all matches are correct, you win!</li>
+                    </ol>
+                </div>
+
+                <div>
+                    <h3 style="font-weight: bold; margin-bottom: 0.5rem; margin-top: 1rem;">Tips:</h3>
+                    <ul style="list-style-type: disc; padding-left: 1.25rem;">
+                        <li style="margin-top: 0.5rem;">Click on a filled input box to remove the word</li>
+                        <li style="margin-top: 0.5rem;">Use the Reset button to clear all your selections</li>
+                        <li style="margin-top: 0.5rem;">Use the New Puzzle button to get a new set of birds</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Core game state
+        const state = {
+            birdData: [], // Will hold the full dataset from CSV
+            currentBirds: [], // Current 5 birds for the puzzle
+            selectedInputBox: null, // Currently selected input box
+            filledBoxes: {}, // Track which boxes are filled
+            activeWords: {} // Track which words are active/used
+        };
+
+        // DOM Elements
+        const elements = {
+            birdsContainer: document.getElementById('birds-container'),
+            wordBank: document.getElementById('word-bank'),
+            resetButton: document.getElementById('reset-button'),
+            newPuzzleButton: document.getElementById('new-puzzle-button'),
+            showAnswerButton: document.getElementById('show-answer-button'),
+            helpButton: document.getElementById('help-button'),
+            helpModal: document.getElementById('help-modal')
+        };
+
+        // Function to load bird data
+        async function loadBirdData() {
+            // Using the actual CSV data from Birdfive Database.csv
+            const birds = [
+                { word1: "Keel-billed", word2: "Motmot", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191471/DSCN2586_rwnnhm.jpg" },
+                { word1: "Yellow-rumped", word2: "Warbler", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191435/DSCN3235_uhkgui.jpg" },
+                { word1: "Cinnamon", word2: "Teal", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191399/DSCN3371small_re5xi4.jpg" },
+                { word1: "Pied-billed", word2: "Grebe", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191398/DSCN3332small_cgp67v.jpg" },
+                { word1: "Great", word2: "Horned Owl", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191298/P1090245small_vuhxzf.jpg" },
+                { word1: "Western", word2: "Screech Owl", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191297/P1090212small_atzyqe.jpg" },
+                { word1: "Ring-billed", word2: "Gull", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191296/P1090176small_jxip4o.jpg" },
+                { word1: "Double-crested", word2: "Cormorant", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191295/P1080940small_d53oib.jpg" },
+                { word1: "Golden", word2: "Eagle", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191294/P1080907small_dbdzus.jpg" },
+                { word1: "Black-capped", word2: "Chickadee", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191294/P1080754small_gyjyax.jpg" },
+                { word1: "Dark-eyed", word2: "Junco", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191293/P1080617small_nsuvpm.jpg" },
+                { word1: "American", word2: "Robin", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191292/P1080366small_djdvs9.jpg" },
+                { word1: "Black-necked", word2: "Stilt", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191291/P1080258small_hdzvs6.jpg" },
+                { word1: "House", word2: "Finch", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191290/P1080210small_cmfouq.jpg" },
+                { word1: "Red-shouldered", word2: "Hawk", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191289/P1030953-2small_vblfxy.jpg" },
+                { word1: "Double-crested", word2: "Cormorant", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191288/P1030901-2small_qbib2e.jpg" },
+                { word1: "Black-capped", word2: "Chickadee", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191288/P1010009-2small_uhgixn.jpg" },
+                { word1: "Bald", word2: "Eagle", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191287/P1000748-2small_usijq4.jpg" },
+                { word1: "Western", word2: "Kingbird", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190957/P1070116_mmxlav.jpg" },
+                { word1: "Eastern", word2: "Phoebe", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190915/P1030929_z5vryr.jpg" },
+                { word1: "Bullock's", word2: "Oriole", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190403/DSCN0402_elx5tt.jpg" },
+                { word1: "Canada", word2: "Goose", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190377/DSCN0785_loheqk.jpg" },
+                { word1: "Ringed", word2: "Kingfisher", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190347/DSCN2293_ljyhko.jpg" },
+                { word1: "Montezuma", word2: "Oropendola", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190344/DSCN2615_nxkmvb.jpg" },
+                { word1: "Wood", word2: "Duck", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190314/DSCN3042_vyihhp.jpg" },
+                { word1: "House", word2: "Sparrow", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190228/P1000162_yonit9.jpg" },
+                { word1: "Great", word2: "Cormorant", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190228/P1030287-2_fswz8o.jpg" },
+                { word1: "Northern", word2: "Flicker", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190228/P1000478_a2w0an.jpg" },
+                { word1: "Mountain", word2: "Bluebird", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190227/P1050508_hj6syp.jpg" },
+                { word1: "Great-tailed", word2: "Grackle", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190226/P1040592_cpqehc.jpg" },
+                { word1: "Mourning", word2: "Dove", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190226/P1060795_u1uimx.jpg" },
+                { word1: "Belted", word2: "Kingfisher", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190226/P1060257_tehih9.jpg" },
+                { word1: "American", word2: "Kestrel", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190226/P1060834_pr9anj.jpg" },
+                { word1: "Peregrine", word2: "Falcon", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/P1140928_ve5som.jpg" },
+                { word1: "Caspian", word2: "Tern", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0627_m0brbi.jpg" },
+                { word1: "American", word2: "Avocet", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0358_o8pp50.jpg" },
+                { word1: "American White", word2: "Pelican", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0630_hq2t75.jpg" },
+                { word1: "Barn", word2: "Swallow", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0921_bjd0jm.jpg" },
+                { word1: "American", word2: "Robin", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN1142_vk2dos.jpg" },
+                { word1: "Snow", word2: "Goose", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN3358_yzrjau.jpg" },
+                { word1: "Yellow", word2: "Warbler", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN1015_r9fgdn.jpg" },
+                { word1: "Mute", word2: "Swan", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN1320_pbtqt5.jpg" },
+                { word1: "Broad-billed", word2: "Motmot", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN1587_wdpujk.jpg" },
+                { word1: "Roseate", word2: "Spoonbill", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN1979_nrwgvl.jpg" },
+                { word1: "Green", word2: "Heron", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN2033_gfytco.jpg" },
+                { word1: "Turkey", word2: "Vulture", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190220/DSCN2521_bezepx.jpg" },
+                { word1: "Northern", word2: "Mockingbird", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190220/DSCN3404_isayxh.jpg" },
+                { word1: "White-throated", word2: "Magpie-Jay", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190220/DSCN2757_rnkygp.jpg" },
+                { word1: "Scarlet-rumped", word2: "Tanager", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190220/DSCN2170_o3lb4q.jpg" },
+                { word1: "Yellow-headed", word2: "Blackbird", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741187333/DSCN0964_xsnqwt.jpg" },
+                { word1: "Clark's", word2: "Grebe", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193034/DSCN0931_torvva.jpg" },
+                { word1: "Snowy", word2: "Egret", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193106/DSCN0913_xm0lcl.jpg" },
+                { word1: "Western", word2: "Meadowlark", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193265/DSCN0479_ku128m.jpg" },
+                { word1: "Cooper's", word2: "Hawk", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193320/DSCN0078_p9k0nc.jpg" },
+                { word1: "Cedar", word2: "Waxwing", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193349/DSCN0043_ss4z4i.jpg" },
+                { word1: "White-crowned", word2: "Sparrow", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193419/P1150699_xqwnmm.jpg" },
+                { word1: "European", word2: "Starling", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193426/P1150754_kvej9g.jpg" },
+                { word1: "Ring-necked", word2: "Duck", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193432/P1150675_fa1hjz.jpg" },
+                { word1: "Downy", word2: "Woodpecker", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193469/P1150423_wflm5z.jpg" },
+                { word1: "Eurasian collared", word2: "Dove", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193652/P1140521_icjnr3.jpg" },
+                { word1: "American", word2: "Crow", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193701/DSCN3777_xkgauj.jpg" },
+                { word1: "Common", word2: "Merganser", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193706/DSCN3790_v5skto.jpg" },
+                { word1: "Kill", word2: "deer", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193729/DSCN3570_d00kta.jpg" },
+                { word1: "Bare-throated", word2: "Tiger Heron", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193738/DSCN2150_yltktz.jpg" },
+                { word1: "Great", word2: "Kiskadee", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193748/DSCN1610_jtf8c7.jpg" },
+                { word1: "Kill", word2: "deer", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193770/P1150208_aajlrb.jpg" },
+                { word1: "Red-tailed", word2: "Hawk", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193823/P1140454small_e6mlhq.jpg" },
+                { word1: "Red-tailed", word2: "Hawk", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193826/P1140727small_puskjg.jpg" },
+                { word1: "Common", word2: "Raven", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741193854/DSCN3668_a4y14t.jpg" }
+            ];
+            
+            state.birdData = birds;
+            return birds;
+        }
+
+        // No longer needed as we're using hardcoded data
+
+        // Select 5 random birds for the game
+        function selectRandomBirds() {
+            const shuffled = [...state.birdData].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 5);
+        }
+
+        // Initialize the birds display
+        function initializeBirdsDisplay() {
+            elements.birdsContainer.innerHTML = '';
+            
+            state.currentBirds.forEach((bird, index) => {
+                const birdItem = document.createElement('div');
+                birdItem.className = 'bird-item';
+                
+                // Create bird image
+                const img = document.createElement('img');
+                img.className = 'bird-image';
+                img.src = bird.photoLink;
+                img.alt = `Bird ${index + 1}`;
+                img.onerror = () => {
+                    // If image loading fails, use placeholder
+                    img.src = `/api/placeholder/120/120`;
+                    console.log(`Failed to load image: ${bird.photoLink}`);
+                };
+                
+                // Create input boxes
+                const inputsContainer = document.createElement('div');
+                inputsContainer.className = 'bird-inputs';
+                
+                // Input box for Word 1
+                const input1 = document.createElement('div');
+                input1.className = 'input-box';
+                input1.dataset.birdIndex = index;
+                input1.dataset.wordType = 'word1';
+                input1.addEventListener('click', handleInputBoxClick);
+                
+                // Input box for Word 2
+                const input2 = document.createElement('div');
+                input2.className = 'input-box';
+                input2.dataset.birdIndex = index;
+                input2.dataset.wordType = 'word2';
+                input2.addEventListener('click', handleInputBoxClick);
+                
+                // Append elements
+                inputsContainer.appendChild(input1);
+                inputsContainer.appendChild(input2);
+                
+                birdItem.appendChild(img);
+                birdItem.appendChild(inputsContainer);
+                
+                elements.birdsContainer.appendChild(birdItem);
+            });
+        }
+
+        // Initialize the word bank
+        function initializeWordBank() {
+            elements.wordBank.innerHTML = '';
+            
+            // Collect all words
+            const words = [];
+            state.currentBirds.forEach(bird => {
+                words.push(bird.word1);
+                words.push(bird.word2);
+            });
+            
+            // Shuffle words
+            const shuffledWords = [...words].sort(() => 0.5 - Math.random());
+            
+            // Initialize active words tracking
+            state.activeWords = {};
+            shuffledWords.forEach(word => {
+                state.activeWords[word] = false;
+            });
+            
+            // Create word buttons
+            shuffledWords.forEach(word => {
+                const wordButton = document.createElement('div');
+                wordButton.className = 'word-item';
+                wordButton.textContent = word;
+                wordButton.dataset.word = word;
+                wordButton.addEventListener('click', handleWordClick);
+                
+                elements.wordBank.appendChild(wordButton);
+            });
+        }
+
+        // Handle input box click
+        function handleInputBoxClick(event) {
+            const inputBox = event.currentTarget;
+            
+            // If box is already filled, clear it
+            if (inputBox.textContent) {
+                const word = inputBox.textContent;
+                inputBox.textContent = '';
+                inputBox.classList.remove('filled');
+                
+                // Mark word as available
+                state.activeWords[word] = false;
+                updateWordButtonStates();
+                
+                // Remove from filled boxes tracking
+                const key = `${inputBox.dataset.birdIndex}-${inputBox.dataset.wordType}`;
+                delete state.filledBoxes[key];
+                
+                return;
+            }
+            
+            // Deselect previously selected box
+            if (state.selectedInputBox) {
+                state.selectedInputBox.classList.remove('active');
+            }
+            
+            // Select this box
+            inputBox.classList.add('active');
+            state.selectedInputBox = inputBox;
+        }
+
+        // Handle word click
+        function handleWordClick(event) {
+            const wordButton = event.currentTarget;
+            const word = wordButton.dataset.word;
+            
+            // Check if word is already in use
+            if (state.activeWords[word]) {
+                return;
+            }
+            
+            // Check if an input box is selected
+            if (!state.selectedInputBox) {
+                showToast('Select an input box first!');
+                return;
+            }
+            
+            // Place word in selected input box
+            state.selectedInputBox.textContent = word;
+            state.selectedInputBox.classList.add('filled');
+            state.selectedInputBox.classList.remove('active');
+            
+            // Mark word as in use
+            state.activeWords[word] = true;
+            
+            // Track filled box
+            const key = `${state.selectedInputBox.dataset.birdIndex}-${state.selectedInputBox.dataset.wordType}`;
+            state.filledBoxes[key] = word;
+            
+            // Update word button states
+            updateWordButtonStates();
+            
+            // Clear selection
+            state.selectedInputBox = null;
+            
+            // Check if all boxes are filled
+            if (Object.keys(state.filledBoxes).length === 10) {
+                checkWinCondition();
+            }
+        }
+
+        // Update word button states (active/inactive)
+        function updateWordButtonStates() {
+            const wordButtons = elements.wordBank.querySelectorAll('.word-item');
+            
+            wordButtons.forEach(button => {
+                const word = button.dataset.word;
+                
+                if (state.activeWords[word]) {
+                    button.classList.add('used');
+                } else {
+                    button.classList.remove('used');
+                }
+            });
+        }
+
+        // Check if player has won
+        function checkWinCondition() {
+            let allCorrect = true;
+            
+            // Check each filled box against correct answers
+            for (const key in state.filledBoxes) {
+                const [birdIndex, wordType] = key.split('-');
+                const placedWord = state.filledBoxes[key];
+                const correctWord = state.currentBirds[birdIndex][wordType];
+                
+                if (placedWord !== correctWord) {
+                    allCorrect = false;
+                    break;
+                }
+            }
+            
+            if (allCorrect) {
+                showWinMessage();
+                highlightCorrectAnswers();
+            }
+        }
+
+        // Show win message
+        function showWinMessage() {
+            // Create win message if it doesn't exist
+            if (!document.getElementById('win-message')) {
+                // Create win message
+                const messageDiv = document.createElement('div');
+                messageDiv.id = 'win-message';
+                
+                // Add trophy icon
+                const trophy = document.createElement('span');
+                trophy.className = 'trophy';
+                trophy.textContent = '🏆';
+                messageDiv.appendChild(trophy);
+                
+                // Add congratulatory text
+                const text = document.createElement('div');
+                text.textContent = ['Amazing!', 'Bird-tastic!', 'That\'s Birdfive!'][Math.floor(Math.random() * 3)];
+                messageDiv.appendChild(text);
+                
+                document.body.appendChild(messageDiv);
+                
+                // Remove message after delay
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 3000);
+            }
+        }
+
+        // Highlight correct answers
+        function highlightCorrectAnswers() {
+            const inputBoxes = document.querySelectorAll('.input-box');
+            
+            inputBoxes.forEach(box => {
+                const birdIndex = box.dataset.birdIndex;
+                const wordType = box.dataset.wordType;
+                const word = box.textContent;
+                
+                if (word === state.currentBirds[birdIndex][wordType]) {
+                    box.classList.add('correct');
+                }
+            });
+        }
+
+        // Reset the game
+        function resetGame() {
+            // Clear all input boxes
+            const inputBoxes = document.querySelectorAll('.input-box');
+            inputBoxes.forEach(box => {
+                box.textContent = '';
+                box.classList.remove('filled', 'active', 'correct');
+            });
+            
+            // Reset game state
+            state.selectedInputBox = null;
+            state.filledBoxes = {};
+            
+            // Reset word buttons
+            Object.keys(state.activeWords).forEach(word => {
+                state.activeWords[word] = false;
+            });
+            updateWordButtonStates();
+            
+            // Remove win message if present
+            const winMessage = document.getElementById('win-message');
+            if (winMessage) {
+                winMessage.remove();
+            }
+        }
+
+        // Show the answers
+        function showAnswers() {
+            resetGame();
+            
+            // Fill in all input boxes with correct answers
+            const inputBoxes = document.querySelectorAll('.input-box');
+            
+            inputBoxes.forEach(box => {
+                const birdIndex = box.dataset.birdIndex;
+                const wordType = box.dataset.wordType;
+                const correctWord = state.currentBirds[birdIndex][wordType];
+                
+                box.textContent = correctWord;
+                box.classList.add('filled', 'correct');
+                
+                // Track filled box
+                const key = `${birdIndex}-${wordType}`;
+                state.filledBoxes[key] = correctWord;
+                
+                // Mark word as in use
+                state.activeWords[correctWord] = true;
+            });
+            
+            // Update word button states
+            updateWordButtonStates();
+        }
+
+        // Create a new puzzle
+        function createNewPuzzle() {
+            state.currentBirds = selectRandomBirds();
+            resetGame();
+            initializeBirdsDisplay();
+            initializeWordBank();
+        }
+
+        // Show toast message
+        function showToast(message) {
+            // Remove existing toast if present
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Trigger reflow
+            toast.offsetHeight;
+            
+            // Show toast
+            toast.classList.add('show');
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        // Setup help modal
+        function setupHelpModal() {
+            elements.helpButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                elements.helpModal.classList.remove('hidden');
+            });
+            
+            // Click outside to close
+            elements.helpModal.addEventListener('click', (e) => {
+                if (e.target === elements.helpModal) {
+                    elements.helpModal.classList.add('hidden');
+                }
+            });
+            
+            // Make sure clicks on modal content don't close it
+            const modalContent = elements.helpModal.querySelector('.bg-white');
+            modalContent.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // Initialize game
+        async function initializeGame() {
+            // Load bird data from CSV
+            await loadBirdData();
+            
+            // Select initial birds
+            state.currentBirds = selectRandomBirds();
+            
+            // Setup UI elements
+            initializeBirdsDisplay();
+            initializeWordBank();
+            setupHelpModal();
+            
+            // Button event listeners
+            elements.resetButton.addEventListener('click', resetGame);
+            elements.newPuzzleButton.addEventListener('click', createNewPuzzle);
+            elements.showAnswerButton.addEventListener('click', showAnswers);
+        }
+
+        // Start the game when page loads
+        document.addEventListener('DOMContentLoaded', initializeGame);
+    </script>
+</body>
+</html>
