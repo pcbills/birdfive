@@ -795,10 +795,43 @@
                 }
                 wordToIdMap.get(word).push(wordId);
             });
-                    
-                    // Update word button states
-                    updateWordButtonStates();
+            
+            // Fill in all input boxes with correct answers
+            const inputBoxes = document.querySelectorAll('.input-box');
+            
+            inputBoxes.forEach(box => {
+                const birdIndex = box.dataset.birdIndex;
+                const wordType = box.dataset.wordType;
+                const correctWord = state.currentBirds[birdIndex][wordType];
+                
+                // Find an unused wordId for this word
+                const availableIds = wordToIdMap.get(correctWord) || [];
+                let wordId = null;
+                
+                for (const id of availableIds) {
+                    if (!usedWordIds.has(id)) {
+                        wordId = id;
+                        usedWordIds.add(id);
+                        break;
+                    }
                 }
+                
+                box.textContent = correctWord;
+                box.classList.add('filled', 'correct');
+                
+                if (wordId) {
+                    box.dataset.wordId = wordId;
+                    state.activeWords[wordId] = true;
+                }
+                
+                // Track filled box
+                const key = `${birdIndex}-${wordType}`;
+                state.filledBoxes[key] = correctWord;
+            });
+            
+            // Update word button states
+            updateWordButtonStates();
+        }
 
         // Create a new puzzle
         function createNewPuzzle() {
