@@ -554,36 +554,38 @@
         }
 
         // Initialize the word bank
-        function initializeWordBank() {
-            elements.wordBank.innerHTML = '';
-            
-            // Collect all words
-            const words = [];
-            state.currentBirds.forEach(bird => {
-                words.push(bird.word1);
-                words.push(bird.word2);
-            });
-            
-            // Shuffle words
-            const shuffledWords = [...words].sort(() => 0.5 - Math.random());
-            
-            // Initialize active words tracking
-            state.activeWords = {};
-            shuffledWords.forEach(word => {
-                state.activeWords[word] = false;
-            });
-            
-            // Create word buttons
-            shuffledWords.forEach(word => {
-                const wordButton = document.createElement('div');
-                wordButton.className = 'word-item';
-                wordButton.textContent = word;
-                wordButton.dataset.word = word;
-                wordButton.addEventListener('click', handleWordClick);
+        // Replace the initializeWordBank function with this updated version
+            function initializeWordBank() {
+                elements.wordBank.innerHTML = '';
                 
-                elements.wordBank.appendChild(wordButton);
-            });
-        }
+                // Collect all words
+                const words = [];
+                state.currentBirds.forEach(bird => {
+                    words.push(bird.word1);
+                    words.push(bird.word2);
+                });
+                
+                // Shuffle words
+                const shuffledWords = [...words].sort(() => 0.5 - Math.random());
+                
+                // Initialize active words tracking
+                state.activeWords = {};
+                
+                // Create word buttons with unique IDs
+                shuffledWords.forEach((word, index) => {
+                    const wordId = `word-${index}`; // Create unique ID based on position
+                    state.activeWords[wordId] = false; // Track by ID instead of word text
+                    
+                    const wordButton = document.createElement('div');
+                    wordButton.className = 'word-item';
+                    wordButton.textContent = word;
+                    wordButton.dataset.word = word;
+                    wordButton.dataset.wordId = wordId; // Store the unique ID
+                    wordButton.addEventListener('click', handleWordClick);
+                    
+                    elements.wordBank.appendChild(wordButton);
+                });
+            }
 
         // Handle input box click
         function handleInputBoxClick(event) {
@@ -592,11 +594,19 @@
             // If box is already filled, clear it
             if (inputBox.textContent) {
                 const word = inputBox.textContent;
+                const wordId = inputBox.dataset.wordId; // Get the stored wordId
+                
                 inputBox.textContent = '';
                 inputBox.classList.remove('filled');
                 
-                // Mark word as available
-                state.activeWords[word] = false;
+                // Mark word as available using its specific ID
+                if (wordId && state.activeWords[wordId]) {
+                    state.activeWords[wordId] = false;
+                }
+                
+                // Remove the wordId from the input
+                delete inputBox.dataset.wordId;
+                
                 updateWordButtonStates();
                 
                 // Remove from filled boxes tracking
@@ -620,9 +630,10 @@
         function handleWordClick(event) {
             const wordButton = event.currentTarget;
             const word = wordButton.dataset.word;
+            const wordId = wordButton.dataset.wordId;
             
-            // Check if word is already in use
-            if (state.activeWords[word]) {
+            // Check if this specific word button is already in use
+            if (state.activeWords[wordId]) {
                 return;
             }
             
@@ -637,8 +648,11 @@
             state.selectedInputBox.classList.add('filled');
             state.selectedInputBox.classList.remove('active');
             
-            // Mark word as in use
-            state.activeWords[word] = true;
+            // Store the wordId in the input box for reference when removing
+            state.selectedInputBox.dataset.wordId = wordId;
+            
+            // Mark this specific word instance as in use
+            state.activeWords[wordId] = true;
             
             // Track filled box
             const key = `${state.selectedInputBox.dataset.birdIndex}-${state.selectedInputBox.dataset.wordType}`;
@@ -661,16 +675,15 @@
             const wordButtons = elements.wordBank.querySelectorAll('.word-item');
             
             wordButtons.forEach(button => {
-                const word = button.dataset.word;
+                const wordId = button.dataset.wordId;
                 
-                if (state.activeWords[word]) {
+                if (state.activeWords[wordId]) {
                     button.classList.add('used');
                 } else {
                     button.classList.remove('used');
                 }
             });
         }
-
         // Check if player has won
         function checkWinCondition() {
             let allCorrect = true;
@@ -743,6 +756,7 @@
             inputBoxes.forEach(box => {
                 box.textContent = '';
                 box.classList.remove('filled', 'active', 'correct');
+                delete box.dataset.wordId; // Clear the wordId reference
             });
             
             // Reset game state
@@ -750,8 +764,8 @@
             state.filledBoxes = {};
             
             // Reset word buttons
-            Object.keys(state.activeWords).forEach(word => {
-                state.activeWords[word] = false;
+            Object.keys(state.activeWords).forEach(wordId => {
+                state.activeWords[wordId] = false;
             });
             updateWordButtonStates();
             
@@ -766,28 +780,25 @@
         function showAnswers() {
             resetGame();
             
-            // Fill in all input boxes with correct answers
-            const inputBoxes = document.querySelectorAll('.input-box');
+            // Get all word buttons to map words to their IDs
+            const wordButtons = elements.wordBank.querySelectorAll('.word-item');
+            const wordToIdMap = new Map();
+            const usedWordIds = new Set();
             
-            inputBoxes.forEach(box => {
-                const birdIndex = box.dataset.birdIndex;
-                const wordType = box.dataset.wordType;
-                const correctWord = state.currentBirds[birdIndex][wordType];
+            // Create a map of word text to available wordIds
+            wordButtons.forEach(button => {
+                const word = button.dataset.word;
+                const wordId = button.dataset.wordId;
                 
-                box.textContent = correctWord;
-                box.classList.add('filled', 'correct');
-                
-                // Track filled box
-                const key = `${birdIndex}-${wordType}`;
-                state.filledBoxes[key] = correctWord;
-                
-                // Mark word as in use
-                state.activeWords[correctWord] = true;
+                if (!wordToIdMap.has(word)) {
+                    wordToIdMap.set(word, []);
+                }
+                wordToIdMap.get(word).push(wordId);
             });
-            
-            // Update word button states
-            updateWordButtonStates();
-        }
+                    
+                    // Update word button states
+                    updateWordButtonStates();
+                }
 
         // Create a new puzzle
         function createNewPuzzle() {
