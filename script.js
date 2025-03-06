@@ -13,6 +13,7 @@ const elements = {
     wordBank: document.getElementById('word-bank'),
     resetButton: document.getElementById('reset-button'),
     newPuzzleButton: document.getElementById('new-puzzle-button'),
+    checkAnswerButton: document.getElementById('check-answer-button'),
     showAnswerButton: document.getElementById('show-answer-button'),
     helpButton: document.getElementById('help-button'),
     helpModal: document.getElementById('help-modal'),
@@ -131,7 +132,7 @@ function handleInputBoxClick(event) {
         const wordId = inputBox.dataset.wordId; // Get the stored wordId
 
         inputBox.textContent = '';
-        inputBox.classList.remove('filled');
+        inputBox.classList.remove('filled', 'correct', 'incorrect');
 
         // Mark word as available using its specific ID
         if (wordId && state.activeWords[wordId]) {
@@ -218,6 +219,45 @@ function updateWordButtonStates() {
         }
     });
 }
+// Add this new function to check answers without showing win message
+function checkAnswers() {
+    // Check if all boxes are filled
+    if (Object.keys(state.filledBoxes).length < 10) {
+        showToast('Fill all boxes before checking!');
+        return;
+    }
+    
+    let correctCount = 0;
+    
+    // Get all input boxes
+    const inputBoxes = document.querySelectorAll('.input-box');
+    
+    // Check each input box
+    inputBoxes.forEach(box => {
+        const birdIndex = box.dataset.birdIndex;
+        const wordType = box.dataset.wordType;
+        const placedWord = box.textContent;
+        const correctWord = state.currentBirds[birdIndex][wordType];
+        
+        // Remove previous result classes
+        box.classList.remove('correct', 'incorrect');
+        
+        // Apply appropriate class based on correctness
+        if (placedWord === correctWord) {
+            box.classList.add('correct');
+            correctCount++;
+        } else {
+            box.classList.add('incorrect');
+        }
+    });
+    
+    // If all answers are correct, show win message
+    if (correctCount === 10) {
+        showWinMessage();
+    } else {
+        showToast(`${correctCount}/10 correct`);
+    }
+}
 // Check if player has won
 function checkWinCondition() {
     let allCorrect = true;
@@ -289,7 +329,7 @@ function resetGame() {
     const inputBoxes = document.querySelectorAll('.input-box');
     inputBoxes.forEach(box => {
         box.textContent = '';
-        box.classList.remove('filled', 'active', 'correct');
+        box.classList.remove('filled', 'active', 'correct', 'incorrect');
         delete box.dataset.wordId; // Clear the wordId reference
     });
 
@@ -460,6 +500,7 @@ async function initializeGame() {
     elements.resetButton.addEventListener('click', resetGame);
     elements.newPuzzleButton.addEventListener('click', createNewPuzzle);
     elements.showAnswerButton.addEventListener('click', showAnswers);
+    elements.checkAnswerButton.addEventListener('click', checkAnswers);
 }
 
 // Start the game when page loads

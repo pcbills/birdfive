@@ -414,6 +414,20 @@
                 font-size: 0.7rem;
             }
         }
+        .input-box.incorrect {
+        background-color: var(--color-absent);
+        color: white;
+        border-color: var(--color-absent);
+        }
+
+        /* Update control button styles */
+        #check-answer-button {
+            background-color: #2196F3; /* Blue color to distinguish from other buttons */
+        }
+
+        #check-answer-button:hover {
+            background-color: #0d8bf2;
+        }
     </style>
 </head>
 <body>
@@ -434,6 +448,7 @@
         <div class="control-buttons">
             <button id="reset-button" class="control-button">Reset</button>
             <button id="new-puzzle-button" class="control-button">New Puzzle</button>
+            <button id="check-answer-button" class="control-button">Check Answer</button>
             <button id="show-answer-button" class="control-button">Show Answer</button>
             <a href="https://playfivegames.com" class="fivegames-button" target="_blank">Play other fivegames!</a>
         </div>
