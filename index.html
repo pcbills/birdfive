@@ -339,6 +339,52 @@
                 font-size: 0.7rem;
             }
         }
+        /* Image modal/lightbox styles */
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .image-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border: 2px solid white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+            transform: scale(0.9);
+        }
+
+        .image-modal.visible .modal-image {
+            transform: scale(1);
+        }
+
+        .bird-image {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .bird-image:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -397,6 +443,10 @@
         </div>
     </div>
 
+    <div class="image-modal" id="image-modal">
+        <img src="" alt="Enlarged bird image" class="modal-image" id="modal-image">
+    </div>
+
     <script>
         // Core game state
         const state = {
@@ -415,7 +465,9 @@
             newPuzzleButton: document.getElementById('new-puzzle-button'),
             showAnswerButton: document.getElementById('show-answer-button'),
             helpButton: document.getElementById('help-button'),
-            helpModal: document.getElementById('help-modal')
+            helpModal: document.getElementById('help-modal'),
+            imageModal: document.getElementById('image-modal'),
+            modalImage: document.getElementById('modal-image')
         };
 
         // Function to load bird data
@@ -426,8 +478,8 @@
                 { word1: "Yellow-rumped", word2: "Warbler", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191435/DSCN3235_uhkgui.jpg" },
                 { word1: "Cinnamon", word2: "Teal", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191399/DSCN3371small_re5xi4.jpg" },
                 { word1: "Pied-billed", word2: "Grebe", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191398/DSCN3332small_cgp67v.jpg" },
-                { word1: "Great", word2: "Horned Owl", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191298/P1090245small_vuhxzf.jpg" },
-                { word1: "Western", word2: "Screech Owl", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191297/P1090212small_atzyqe.jpg" },
+                { word1: "Great Horned", word2: "Owl", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191298/P1090245small_vuhxzf.jpg" },
+                { word1: "Western Screech", word2: "Owl", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191297/P1090212small_atzyqe.jpg" },
                 { word1: "Ring-billed", word2: "Gull", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191296/P1090176small_jxip4o.jpg" },
                 { word1: "Double-crested", word2: "Cormorant", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191295/P1080940small_d53oib.jpg" },
                 { word1: "Golden", word2: "Eagle", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741191294/P1080907small_dbdzus.jpg" },
@@ -458,7 +510,7 @@
                 { word1: "Peregrine", word2: "Falcon", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/P1140928_ve5som.jpg" },
                 { word1: "Caspian", word2: "Tern", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0627_m0brbi.jpg" },
                 { word1: "American", word2: "Avocet", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0358_o8pp50.jpg" },
-                { word1: "American White", word2: "Pelican", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0630_hq2t75.jpg" },
+                { word1: "American", word2: "White Pelican", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0630_hq2t75.jpg" },
                 { word1: "Barn", word2: "Swallow", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190222/DSCN0921_bjd0jm.jpg" },
                 { word1: "American", word2: "Robin", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN1142_vk2dos.jpg" },
                 { word1: "Snow", word2: "Goose", photoLink: "https://res.cloudinary.com/dh5vukyhz/image/upload/v1741190221/DSCN3358_yzrjau.jpg" },
@@ -524,6 +576,9 @@
                     console.log(`Failed to load image: ${bird.photoLink}`);
                 };
                 
+                // Add click event listener to the image
+                img.addEventListener('click', handleBirdImageClick);
+                
                 // Create input boxes
                 const inputsContainer = document.createElement('div');
                 inputsContainer.className = 'bird-inputs';
@@ -552,6 +607,7 @@
                 elements.birdsContainer.appendChild(birdItem);
             });
         }
+
 
         // Initialize the word bank
         // Replace the initializeWordBank function with this updated version
@@ -887,6 +943,26 @@
                 e.stopPropagation();
             });
         }
+        // Function to handle bird image click
+        function handleBirdImageClick(event) {
+            const img = event.currentTarget;
+            elements.modalImage.src = img.src;
+            elements.imageModal.classList.add('visible');
+            
+            // Prevent click event from propagating to other elements
+            event.stopPropagation();
+        }
+
+        // Function to close the modal
+        function closeImageModal() {
+            elements.imageModal.classList.remove('visible');
+        }
+
+        // Add event listener to the modal itself to close when clicked
+        function setupImageModal() {
+            elements.imageModal.addEventListener('click', closeImageModal);
+        }
+
 
         // Initialize game
         async function initializeGame() {
@@ -900,6 +976,7 @@
             initializeBirdsDisplay();
             initializeWordBank();
             setupHelpModal();
+            setupImageModal();
             
             // Button event listeners
             elements.resetButton.addEventListener('click', resetGame);
