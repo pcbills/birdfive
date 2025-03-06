@@ -385,6 +385,35 @@
         .bird-image:hover {
             transform: scale(1.05);
         }
+        /* Fivegames button styles */
+        /* Fivegames button styles - for inline with other controls */
+        .fivegames-button {
+            background-color: #9C27B0; /* Different color to distinguish from other buttons */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: filter 0.2s;
+            display: inline-block;
+        }
+
+        .fivegames-button:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Update responsive styles to match other control buttons */
+        @media (max-width: 600px) {
+            .fivegames-button {
+                padding: 8px 12px;
+                font-size: 0.7rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -406,6 +435,7 @@
             <button id="reset-button" class="control-button">Reset</button>
             <button id="new-puzzle-button" class="control-button">New Puzzle</button>
             <button id="show-answer-button" class="control-button">Show Answer</button>
+            <a href="https://playfivegames.com" class="fivegames-button" target="_blank">Play other fivegames!</a>
         </div>
     </div>
 
@@ -442,7 +472,6 @@
             </div>
         </div>
     </div>
-
     <div class="image-modal" id="image-modal">
         <img src="" alt="Enlarged bird image" class="modal-image" id="modal-image">
     </div>
